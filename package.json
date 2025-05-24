@@ -5,19 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
-    "pretest": "rm -rf reports && mkdir -p reports",
-    "test:cucumber": "cucumber-js --require-module ts-node/register --require steps/**/*.ts features/**/*.feature --format json:reports/cucumber-report.json",
-    "posttest": "node report.js",
-    "testAll": "npm run pretest && npm run test:cucumber || true && npm run posttest",
-    "testTags": "cucumber-js --require-module ts-node/register --require steps/**/*.ts features/**/*.feature --tags @flight --format json:reports/cucumber-report.json",
-    "testB": "npm run pretest && npm run testTags || true && npm run posttest",
-    "testTagsParallel": "cucumber-js --parallel 3 --require-module ts-node/register --require steps/**/*.ts features/**/*.feature --tags @flight --format json:reports/cucumber-report.json",
-    "testC": "npm run pretest && npm run testTagsParallel || true && npm run posttest",
-    "test:run": "MAX_RETRIES=1 ts-node scripts/runner.ts",
+    "test:run": "MAX_RETRIES=1 PARALLEL=3 ts-node scripts/runner.ts",
     "test:rerun": "MAX_RETRIES=2 ts-node scripts/rerun.ts",
     "testApi": "TAGS=\"@api\" npm run test:run",
-    "testRunSequential": "TAGS=\"@flight\" npm run test:run",
-    "testRunParallel": "TAGS=\"@example\" PARALLEL=3 UI_MODE=N npm run test:run"
+    "trs": "TAGS=\"@flight\" MAX_RETRIES=0 ts-node scripts/runner.ts",
+    "trp": "TAGS=\"@flight\" MAX_RETRIES=1 PARALLEL=3 ts-node scripts/runner.ts"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^11.3.0",

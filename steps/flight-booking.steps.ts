@@ -1,43 +1,27 @@
 import { Given, When, Then } from '@cucumber/cucumber';
-import { chromium, Browser, Page } from 'playwright';
 import { expect } from 'chai';
-import { parseISO, addDays, format } from 'date-fns';
 import { getDateFromRelative } from '../utils/step-utils';
 import { TIMEOUTS } from '../utils/timeout-config';
+import { FlightBookingPage } from '../pages/FlightBookingPage';
 
 Given('I am on the flight booking page', async function () {
-    await this.page.goto('https://www.delta.com/apac/en');
-    // Try to click the "Accept All" button if it appears
-    try {
-        await this.page.click('#onetrust-accept-btn-handler', { timeout: TIMEOUTS.GLOBAL });
-    } catch (e) {
-        // Ignore if not present
-    }
+    const flightPage = new FlightBookingPage(this.page);
+    await flightPage.gotoAndAcceptCookies()
 });
 
 When('I select {string} as the from airport', async function (fromAirport: string) {
-    const [code, ...nameParts] = fromAirport.split(' ');
-    const airportCode = code;
-    const airportName = nameParts.join(' ').trim();
-    await this.page.click('#fromAirportName');
-    await this.page.fill('#search_input', airportCode);
-    await this.page.waitForSelector('.search-result-container .airport-list', { state: 'visible' });
-    await this.page.click(`.search-result-container .airport-list .airport-city:has-text("${airportName}")`);
+    const flightPage = new FlightBookingPage(this.page);
+    await flightPage.selectFromAirport(fromAirport);
 });
 
 When('I select {string} as the to airport', async function (toAirport: string) {
-    const [code, ...nameParts] = toAirport.split(' ');
-    const airportCode = code;
-    const airportName = nameParts.join(' ').trim();
-    await this.page.click('#toAirportName');
-    await this.page.fill('#search_input', airportCode);
-    await this.page.waitForSelector('.search-result-container .airport-list', { state: 'visible' });
-    await this.page.click(`.search-result-container .airport-list .airport-city:has-text("${airportName}")`);
+    const flightPage = new FlightBookingPage(this.page);
+    await flightPage.selectToAirport(toAirport);
 });
 
 When('I select {string} as the trip type', async function (tripType: string) {
-    await this.page.click('span[aria-labelledby="selectTripType-label"]');
-    await this.page.click(`li[role="option"]:has-text("${tripType}")`);
+    const flightPage = new FlightBookingPage(this.page);
+    await flightPage.selectTripType(tripType);
 });
 
 When('I select {string} as the {string} date', async function (date: string, depart_arrival: string) {
@@ -123,11 +107,8 @@ When('I select {string} as the {string} date', async function (date: string, dep
     }
 });
 
-Then('the form should reflect my selections', async function () {
-    // Add assertions to verify the form fields have the correct values
-    const from = await this.page.inputValue('input[name="fromCity"]');
-    const to = await this.page.inputValue('input[name="toCity"]');
-    expect(from).to.include('Bangalore');
-    expect(to).to.include('Delhi');
-    // Add more assertions for trip type and dates as needed
+Then('the selected flight details should be:', async function (dataTable) {
+    const flightPage = new FlightBookingPage(this.page);
+    const expected = Object.fromEntries(dataTable.rawTable.slice(1));
+    await flightPage.validateFlightDetails(expected);
 });

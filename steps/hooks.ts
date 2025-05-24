@@ -24,7 +24,11 @@ After({ tags: '@api' }, async function () {
 setDefaultTimeout(30 * 1000);
 
 Before({ tags: '@ui' }, async function () {
+    console.log('[Hooks Before-UI] Launching browser and creating page...');
+
+    // Use the browser type from the config or default to chromium
     const browserType = { chromium, firefox, webkit }[config.use?.browserName || 'chromium'];
+
     // Prefer env variable, fallback to config, then default to true
     const headless =
         process.env.UI_MODE
@@ -42,30 +46,32 @@ Before({ tags: '@ui' }, async function () {
     });
 
     this.page = await context.newPage();
+    console.log('[Hooks Before-UI] Browser launched and page created.');
 });
 
 After({ tags: '@ui' }, async function () {
     if (this.page) {
         const screenshot = await this.page.screenshot();
-        if (this.attach) await this.attach(screenshot, 'image/png');
+        if (this.attach) this.attach(screenshot, 'image/png');
         await this.page.close();
     }
     if (this.browser) {
         await this.browser.close();
     }
+    console.log('[Hooks After-UI] Browser and page closed.');
 });
 
 BeforeStep(function ({ pickle, pickleStep }) {
     const scenario = pickle.name;
     const step = pickleStep.text;
-    const time = new Date().toLocaleTimeString();
+    const time = new Date().toLocaleString();
     console.log(`[${time}] [${scenario}] START Step : ${step}`);
 });
 
 AfterStep(function ({ pickle, pickleStep }) {
     const scenario = pickle.name;
     const step = pickleStep.text;
-    const time = new Date().toLocaleTimeString();
+    const time = new Date().toLocaleString();
     if (this.attach) {
         this.attach(`Step Executed at: [${time}]`, 'text/plain');
     }
