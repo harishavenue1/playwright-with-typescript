@@ -8,8 +8,9 @@
     "test:run": "MAX_RETRIES=1 PARALLEL=3 ts-node scripts/runner.ts",
     "test:rerun": "MAX_RETRIES=2 ts-node scripts/rerun.ts",
     "testApi": "TAGS=\"@api\" npm run test:run",
-    "trs": "MAX_RETRIES=0 TAGS=\"@ui\" ts-node scripts/runner.ts",
-    "trp": "MAX_RETRIES=5 TAGS=\"@example\" PARALLEL=4 ts-node scripts/runner.ts"
+    "trf": "MAX_RETRIES=0 PARALLEL=4 TAGS=\"@flight\" ts-node scripts/runner.ts",
+    "trs": "MAX_RETRIES=0 TAGS=\"@flight-booking\" ts-node scripts/runner.ts",
+    "trp": "MAX_RETRIES=0 PARALLEL=4 TAGS=\"@flight-booking\" ts-node scripts/runner.ts"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^11.3.0",

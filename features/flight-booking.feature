@@ -1,4 +1,4 @@
-@ui
+@ui @flight
 Feature: Flight Booking
 
   Background:
