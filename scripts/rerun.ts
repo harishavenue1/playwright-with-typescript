@@ -2,9 +2,11 @@ import { execSync } from 'child_process';
 import * as fs from 'fs';
 
 const rerunFile = 'reports/@rerun.txt';
-const maxRetries = Number(process.env.MAX_RETRIES) || 3;
+const maxRetries = Number(process.env.MAX_RETRIES) || 1;
 let exitCode = 0;
 let lastAttempt = 0;
+
+console.log(`Starting rerun process with max retries: ${maxRetries}`);
 
 for (let attempt = 1; attempt <= maxRetries; attempt++) {
     if (fs.existsSync(rerunFile) && fs.readFileSync(rerunFile, 'utf-8').trim()) {
@@ -21,6 +23,7 @@ for (let attempt = 1; attempt <= maxRetries; attempt++) {
             if (fs.readFileSync(rerunFile, 'utf-8').trim() === '') {
                 console.log('✅ All rerun scenarios passed. Cleaning up rerun.txt.');
                 //fs.unlinkSync(rerunFile);
+                break;
             }
         } catch (err: any) {
             console.error(`❌ Rerun attempt ${attempt} failed scenarios still failing. Check the rerun report for details.`);
@@ -28,7 +31,6 @@ for (let attempt = 1; attempt <= maxRetries; attempt++) {
         }
         // Always generate the report
         execSync('node report.js', { stdio: 'inherit', env: process.env });
-        break;
     } else {
         if (attempt === 1) {
             console.log('No failed scenarios to rerun.');

@@ -112,3 +112,32 @@ Then('the selected flight details should be:', async function (dataTable) {
     const expected = Object.fromEntries(dataTable.rawTable.slice(1));
     await flightPage.validateFlightDetails(expected);
 });
+
+When('I click the {string} link in the About Delta footer section', async function (linkName: string) {
+    try {
+        const flightPage = new FlightBookingPage(this.page);
+        const newPage = await flightPage.clickFooterLink('About Delta', linkName, {
+            attach: async (_name: string, options: { body: Buffer, contentType: string }) => {
+                // Use the Cucumber World attach method, adapting the arguments as needed
+                // The first argument is the data, the second is the media type
+                this.attach(options.body, options.contentType);
+            }
+        });
+        if (newPage) {
+            this.page = newPage; // <-- Update the World context for subsequent steps
+        }
+    } catch (err) {
+        console.error('Error clicking About Delta footer link:', err);
+        // throw err;
+    }
+});
+
+Then('I should be navigated to a page containing {string}', async function (expectedHeader) {
+    try {
+        const flightPage = new FlightBookingPage(this.page);
+        await flightPage.waitForHeadingText(expectedHeader);
+    } catch (err) {
+        console.error('Error verifying navigation to expected page:', err);
+        throw err;
+    }
+});

@@ -3,7 +3,7 @@ Feature: Example Domain
 
   Scenario: Display the correct title
     Given I am on the "https://example.com" page
-    Then the page title should be "Example Domain"
+    Then the page title should be "Example Domai"
 
   Scenario: Heading is visible
     Given I am on the "https://example.com" page

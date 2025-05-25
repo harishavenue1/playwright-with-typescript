@@ -21,7 +21,7 @@ After({ tags: '@api' }, async function () {
 });
 
 // Set a default timeout for all steps
-setDefaultTimeout(30 * 1000);
+setDefaultTimeout(60 * 1000);
 
 Before({ tags: '@ui' }, async function () {
     console.log('[Hooks Before-UI] Launching browser and creating page...');

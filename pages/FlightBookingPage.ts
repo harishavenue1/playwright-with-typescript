@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 import { getDateFromRelative } from '../utils/step-utils';
 
 export class FlightBookingPage {
@@ -36,6 +36,11 @@ export class FlightBookingPage {
     readonly returnLabelContainer: Locator;
     readonly returnDateSpan: Locator;
     readonly returnDateInput: Locator;
+
+    // Footer Locators
+    readonly footerSectionSelector = '.footer-content';
+    readonly footerSectionHeadingSelector = 'h3, a[dropdowntoggle]';
+    readonly footerLinkSelector = 'li a';
 
     constructor(page: Page) {
         this.page = page;
@@ -162,4 +167,87 @@ export class FlightBookingPage {
         await this.tripTypeDropdown.click();
         await this.tripTypeOptions.filter({ hasText: tripType }).first().click();
     }
+
+    // Clicks a footer link by section and link name, scrolls into view for screenshot
+    async clickFooterLink(section: string, linkName: string, testInfo: { attach: (name: string, options: { body: Buffer, contentType: string }) => Promise<void | Page> }) {
+        try {
+            const sectionLocator = this.page.locator(this.footerSectionSelector).filter({
+                has: this.page.locator(this.footerSectionHeadingSelector).filter({ hasText: section })
+            });
+            const linkLocators = sectionLocator.locator(this.footerLinkSelector).filter({ hasText: linkName });
+            const count = await linkLocators.count();
+            let found = false;
+            for (let i = 0; i < count; i++) {
+                const link = linkLocators.nth(i);
+                if (await link.isVisible()) {
+                    // Check if the link opens in a new tab
+                    const targetAttr = await link.getAttribute('target');
+                    if (targetAttr === '_blank') {
+                        // New tab/window
+                        const [newPage] = await Promise.all([
+                            this.page.context().waitForEvent('page').catch(() => null),
+                            (async () => {
+                                const elementHandle = await link.elementHandle();
+                                if (elementHandle) {
+                                    await this.page.evaluate(
+                                        (el) => el.scrollIntoView({ block: 'center', behavior: 'auto' }),
+                                        elementHandle
+                                    );
+                                }
+                                const screenshot = await this.page.screenshot();
+                                await testInfo.attach('footer-link', { body: screenshot, contentType: 'image/png' });
+                                await link.click();
+                            })()
+                        ]);
+                        if (newPage) {
+                            await newPage.waitForLoadState('domcontentloaded');
+                            return newPage;
+                        }
+                    } else {
+                        // Same tab navigation
+                        await Promise.all([
+                            this.page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => { }),
+                            (async () => {
+                                const elementHandle = await link.elementHandle();
+                                if (elementHandle) {
+                                    await this.page.evaluate(
+                                        (el) => el.scrollIntoView({ block: 'center', behavior: 'auto' }),
+                                        elementHandle
+                                    );
+                                }
+                                const screenshot = await this.page.screenshot();
+                                await testInfo.attach('footer-link', { body: screenshot, contentType: 'image/png' });
+                                await link.click();
+                            })()
+                        ]);
+                    }
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                throw new Error(`No visible link found for "${linkName}" in section "${section}"`);
+            }
+        } catch (error) {
+            console.error(`Error clicking footer link "${linkName}" in section "${section}":`, error);
+            throw new Error(`Failed to click footer link "${linkName}" in section "${section}": ${error}`);
+        }
+    }
+
+    // Returns the HTTP status of the current page
+    async getCurrentPageStatus(): Promise<number> {
+        try {
+            const url = this.page.url();
+            const response = await this.page.request.get(url);
+            return response.status();
+        } catch (error) {
+            console.error(`Error getting page status:`, error);
+            throw new Error(`Failed to get page status: ${error}`);
+        }
+    }
+
+    async waitForHeadingText(expectedHeading: string, timeout = 20000): Promise<void> {
+        await this.page.locator(`:has-text("${expectedHeading}")`).first().waitFor({ state: 'visible', timeout });
+    }
 }
+

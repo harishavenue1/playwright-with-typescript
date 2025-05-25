@@ -12,8 +12,13 @@ process.env.TEST_START_TIME = startTime.toString();
 // Read tags and parallel from env or use defaults
 const tags = process.env.TAGS || '';
 const parallel = process.env.PARALLEL || '';
-const maxRetries = Number(process.env.MAX_RETRIES) || 3;
+const maxRetries = process.env.MAX_RETRIES !== undefined ? Number(process.env.MAX_RETRIES) : 1;
 const format = 'json:reports/cucumber-report.json';
+
+// Validate inputs 
+console.log(`Max retries read as: ${maxRetries}`);
+console.log(`Parallel count read as: ${parallel}`);
+console.log(`tags read as: ${tags}`);
 
 // Build the cucumber-js command
 let cucumberCmd = `npx cucumber-js --require-module ts-node/register --require steps/**/*.ts features/**/*.feature --format summary --format ${format}`;
@@ -35,6 +40,11 @@ try {
 execSync('node report.js', { stdio: 'inherit', env: process.env });
 
 // Check if rerun.txt exists and is not empty
+if (maxRetries < 1) {
+    console.log('Rerun attempts disabled. Exiting without rerun.');
+    process.exit(exitCode);
+}
+
 const rerunFile = 'reports/@rerun.txt';
 if (fs.existsSync(rerunFile) && fs.readFileSync(rerunFile, 'utf-8').trim()) {
     console.log('Detected failed scenarios. Starting rerun attempts...');
@@ -42,6 +52,7 @@ if (fs.existsSync(rerunFile) && fs.readFileSync(rerunFile, 'utf-8').trim()) {
     let cucumberCmd = `ts-node scripts/rerun.ts`;
     if (maxRetries) cucumberCmd = `MAX_RETRIES=${maxRetries} ts-node scripts/rerun.ts`;
     try {
+        console.log(`Running rerun with command: ${cucumberCmd}`);
         execSync(cucumberCmd, { stdio: 'inherit', env: process.env });
     } catch (err) {
         // Suppress stacktrace, print friendly message

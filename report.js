@@ -90,7 +90,7 @@ if (tagNames.length) {
   console.log('---------------------------------------');
   for (const tag of tagNames) {
     const { pass, fail } = tagStats[tag];
-    console.log(`| ${tag.padEnd(13)} | ${String(pass).padEnd(6)} | ${String(fail).padEnd(10)} |`);
+    console.log(`| ${tag.padEnd(14)} | ${String(pass).padEnd(6)} | ${String(fail).padEnd(10)} |`);
   }
   console.log('---------------------------------------\n');
 } else {
